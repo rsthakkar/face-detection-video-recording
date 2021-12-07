@@ -1,0 +1,29 @@
+body {
+	text-align: center;
+	color: green;
+	font-size: 1.2em;
+}
+
+.display-none {
+	display: none;
+}
+
+.recording {
+	color: red;
+	background-color: rgb(241 211 211);
+	padding: 5px;
+	margin: 6px auto;
+	width: fit-content;
+}
+
+
+
+audio {
+	display: block;
+	margin: 6px auto;
+}
+
+a {
+	color: green;
+}
+
