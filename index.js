@@ -5,6 +5,7 @@ const webCamContainer =
 
 let selectedMedia = null;
 let model;
+let coco_ssd_model;
 let interval;
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
@@ -54,7 +55,7 @@ const videoMediaConstraints = {
 	// false to record
 	// only video
 	audio: true,
-	video: {width: 600, height: 400},
+	video: { width: 600, height: 400 },
 };
 
 // When the user clicks the "Start
@@ -197,12 +198,14 @@ function stopRecording(thisButton, otherButton) {
 
 const detectFace = async () => {
 	const prediction = await model.estimateFaces(webCamContainer, false);
+	const coco_prediction = await coco_ssd_model.detect(webCamContainer);
 	console.log(prediction);
+	console.log("coco =>",coco_prediction);
 
 	ctx.drawImage(webCamContainer, 0, 0, 600, 400);
 
 	prediction.forEach((pred) => {
-		console.log(ctx);
+		// console.log(ctx);
 		ctx.beginPath();
 		ctx.lineWidth = "4";
 		ctx.strokeStyle = "blue";
@@ -213,12 +216,69 @@ const detectFace = async () => {
 			pred.bottomRight[1] - pred.topLeft[1]
 		);
 		ctx.stroke();
-		console.log(ctx);
+		// console.log(ctx);
+	});
+
+	coco_prediction.forEach((pred) => {
+		ctx.beginPath();
+		ctx.lineWidth = "4";
+		ctx.strokeStyle = "yellow";
+		ctx.rect(
+			pred.bbox[0],
+			pred.bbox[1],
+			pred.bbox[2],
+			pred.bbox[3]
+		);
+		ctx.stroke();
 	});
 }
 
 webCamContainer.addEventListener("loadeddata", async () => {
 	model = await blazeface.load();
+	coco_ssd_model = await cocoSsd.load();
 	interval = setInterval(detectFace, 100);
-})
+});
+
+function speak() {
+	var text = document.getElementById('speak_text');
+	var lang = document.getElementById('voiceSelect');
+	var msg = new SpeechSynthesisUtterance();
+	var voices = window.speechSynthesis.getVoices();
+	// msg.voice = voices[10];
+	// msg.volume = 1; // From 0 to 1
+	// msg.rate = 1; // From 0.1 to 10
+	// msg.pitch = 2; // From 0 to 2
+	msg.text = text.value;
+	msg.lang = lang.value;
+	speechSynthesis.cancel();
+	speechSynthesis.speak(msg);
+
+}
+
+function populateVoiceList() {
+	
+
+	var voices = speechSynthesis.getVoices();
+	console.log(voices);
+
+	for (var i = 0; i < voices.length; i++) {
+		var option = document.createElement('option');
+		option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+		option.value = voices[i].lang;
+		if (voices[i].default) {
+			option.textContent += ' -- DEFAULT';
+		}
+
+		option.setAttribute('data-lang', voices[i].lang);
+		option.setAttribute('data-name', voices[i].name);
+		document.getElementById("voiceSelect").appendChild(option);
+	}
+}
+
+populateVoiceList();
+if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+	speechSynthesis.onvoiceschanged = populateVoiceList;
+  }
+  
+
 
